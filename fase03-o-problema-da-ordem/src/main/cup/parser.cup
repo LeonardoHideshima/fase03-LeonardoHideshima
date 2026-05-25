@@ -29,11 +29,12 @@ non terminal expr;
 
 /* ========================================================================= */
 /* PRECEDÊNCIA E ASSOCIATIVIDADE                                             */
+/* O operador declarado por ÚLTIMO tem a MAIOR precedência.                 */
 /* ========================================================================= */
 
-/* TODO 1: Declare a precedência para resolver a ambiguidade matemática. */
-/* Dica: O operador mais embaixo tem a MAIOR precedência!                */
-/* precedence left ... ; */
+precedence left REL_OP;   /* menor precedência: ==, !=, <, >, <=, >=  */
+precedence left ADD_OP;   /* média:  + -                               */
+precedence left MUL_OP;   /* maior:  * / %                             */
 
 /* ========================================================================= */
 /* REGRAS DA GRAMÁTICA                                                       */
@@ -41,21 +42,45 @@ non terminal expr;
 
 start with program;
 
-/* TODO 2: Como definir um programa que é uma lista de comandos? */
-program ::= /* Escreva a regra aqui */ ;
+/* Um programa é simplesmente uma lista (possivelmente vazia) de comandos */
+program ::= stmt_list ;
 
-/* TODO 3: Como definir uma lista recursiva no BNF? */
-stmt_list ::= /* Escreva a regra aqui */ ;
+/* Lista de comandos: recursão à esquerda + caso base vazio */
+stmt_list ::= stmt_list stmt
+            | /* vazio */
+            ;
 
-/* TODO 4: Declaração dos comandos (assign, if, while, block, null) */
-stmt ::= /* Escreva a regra aqui */ ;
+/* Um comando pode ser qualquer um dos tipos abaixo */
+stmt ::= assign_stmt
+       | if_stmt
+       | while_stmt
+       | block_stmt
+       | null_stmt
+       ;
 
+/* Atribuição: ID = expr ; */
 assign_stmt ::= ID ASSIGN expr SEMI ;
 
-/* TODO 5: Implemente o IF, WHILE, BLOCO e NULL */
-/* if_stmt ::= ... */
+/* IF com else opcional — representado por duas produções (BNF puro) */
+if_stmt ::= IF LPAREN expr RPAREN THEN block_stmt
+           | IF LPAREN expr RPAREN THEN block_stmt ELSE block_stmt
+           ;
 
-/* TODO 6: Regras de expressões (aritmética, relacional, etc) */
+/* WHILE: while ( expr ) bloco */
+while_stmt ::= WHILE LPAREN expr RPAREN block_stmt ;
+
+/* Bloco: { lista_de_comandos }  — aceita bloco vazio graças ao stmt_list vazio */
+block_stmt ::= LBRACE stmt_list RBRACE ;
+
+/* Comando nulo: apenas um ponto e vírgula */
+null_stmt ::= SEMI ;
+
+/* Expressões: aritméticas, relacionais e agrupamento */
+/* A precedência declarada acima resolve todas as ambiguidades */
 expr ::= expr ADD_OP expr
-       /* Adicione MUL_OP, REL_OP, parenteses, NUMBER e ID */
+       | expr MUL_OP expr
+       | expr REL_OP expr
+       | LPAREN expr RPAREN
+       | NUMBER
+       | ID
        ;
